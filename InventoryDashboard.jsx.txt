@@ -1,0 +1,121 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, Plus, Download, Filter, Bell, Barcode } from "lucide-react";
+
+const InventoryDashboard = () => {
+  const [inventory, setInventory] = useState([
+    { id: 1, item: "Item A", batch: "BATCH001", receivedStock: 100, soldStock: 50, remainingStock: 50, mfg: "2024-01-10", exp: "2025-01-10", received: "2024-02-15" },
+    { id: 2, item: "Item B", batch: "BATCH002", receivedStock: 50, soldStock: 30, remainingStock: 20, mfg: "2024-02-01", exp: "2025-02-01", received: "2024-03-10" },
+  ]);
+
+  const [stockIn, setStockIn] = useState("");
+  const [stockOut, setStockOut] = useState("");
+  const [selectedItem, setSelectedItem] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [mfgDate, setMfgDate] = useState("");
+  const [expDate, setExpDate] = useState("");
+  const [search, setSearch] = useState("");
+
+  const handleStockIn = () => {
+    if (selectedItem && stockIn && batchNumber && mfgDate && expDate) {
+      setInventory((prev) => [...prev, { id: prev.length + 1, item: selectedItem, batch: batchNumber, receivedStock: Number(stockIn), soldStock: 0, remainingStock: Number(stockIn), mfg: mfgDate, exp: expDate, received: new Date().toISOString().split("T")[0] }]);
+      setStockIn("");
+      setBatchNumber("");
+      setMfgDate("");
+      setExpDate("");
+    }
+  };
+
+  const handleStockOut = () => {
+    if (selectedItem && stockOut && batchNumber) {
+      setInventory((prev) =>
+        prev.map((item) => {
+          if (item.item === selectedItem && item.batch === batchNumber) {
+            const newRemainingStock = item.remainingStock - Number(stockOut);
+            if (newRemainingStock < 0) {
+              alert("Stock out quantity exceeds available stock!");
+              return item;
+            }
+            return { ...item, soldStock: item.soldStock + Number(stockOut), remainingStock: newRemainingStock };
+          }
+          return item;
+        })
+      );
+      setStockOut("");
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">CHIMERA BIOTECH - Inventory Dashboard</h1>
+      
+      {/* Stock In Section */}
+      <div className="bg-white shadow-md rounded-lg p-4">
+        <h2 className="text-xl font-semibold mb-4">Stock In</h2>
+        <div className="flex gap-4 mb-4">
+          <Input placeholder="Item Name" value={selectedItem} onChange={(e) => setSelectedItem(e.target.value)} />
+          <Input placeholder="Batch No" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
+          <Input placeholder="MFG Date" type="date" value={mfgDate} onChange={(e) => setMfgDate(e.target.value)} />
+          <Input placeholder="EXP Date" type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} />
+          <Input placeholder="Stock In" type="number" value={stockIn} onChange={(e) => setStockIn(e.target.value)} />
+          <Button onClick={handleStockIn}>Add Stock</Button>
+        </div>
+      </div>
+      
+      {/* Stock Out Section */}
+      <div className="bg-white shadow-md rounded-lg p-4">
+        <h2 className="text-xl font-semibold mb-4">Stock Out</h2>
+        <div className="flex gap-4 mb-4">
+          <Input placeholder="Item Name" value={selectedItem} onChange={(e) => setSelectedItem(e.target.value)} />
+          <Input placeholder="Batch No" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
+          <Input placeholder="Stock Out" type="number" value={stockOut} onChange={(e) => setStockOut(e.target.value)} />
+          <Button onClick={handleStockOut} variant="destructive">Stock Out</Button>
+        </div>
+      </div>
+      
+      {/* Search & Filters */}
+      <div className="flex gap-4 mb-4">
+        <Input placeholder="Search by Item or Batch" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Button variant="outline"><Filter size={16} /> Filter</Button>
+      </div>
+
+      {/* Stock Table */}
+      <div className="bg-white shadow-md rounded-lg p-4">
+        <h2 className="text-xl font-semibold">Stock Details</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item Name</TableHead>
+              <TableHead>Batch</TableHead>
+              <TableHead>Received Stock</TableHead>
+              <TableHead>Sold Stock</TableHead>
+              <TableHead>Remaining Stock</TableHead>
+              <TableHead>MFG Date</TableHead>
+              <TableHead>EXP Date</TableHead>
+              <TableHead>Received Date</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {inventory.filter(item => item.item.includes(search) || item.batch.includes(search)).map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.item}</TableCell>
+                <TableCell>{item.batch}</TableCell>
+                <TableCell>{item.receivedStock}</TableCell>
+                <TableCell>{item.soldStock}</TableCell>
+                <TableCell>{item.remainingStock}</TableCell>
+                <TableCell>{item.mfg}</TableCell>
+                <TableCell>{item.exp}</TableCell>
+                <TableCell>{item.received}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default InventoryDashboard;
